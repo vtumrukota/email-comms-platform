@@ -1,16 +1,24 @@
 import express from 'express';
 import axios from 'axios';
+import dotenv from 'dotenv';
 
-const app : express.Application = express();
+// Setup Enviornment Variables
+dotenv.config();
 const PORT = process.env.PORT || 8080;
-
-let offlineEmails: any[] = [];
+// Configure axios
+const ax = axios.create({
+  timeout: 10000,
+  headers: {
+    'Content-type': 'application/json',
+    'Authorization': `Bearer ${process.env.SENDGRID_KEY}`,
+  }
+});
 
 // Initialize Server
+const app : express.Application = express();
 app.listen(PORT, () => {
   console.log('Started server & listening on port: ', PORT);
 });
-
 // Send Email POST API
 app.post('/api/v1/email', async(req, res, next) => {
   try {
@@ -27,11 +35,41 @@ app.post('/api/v1/email', async(req, res, next) => {
 
 const sendgridPost = async(data: any = {}) => {
   try {
-    console.log('sendgrid data', data);
-    return await axios.post('https://api.sendgrid.com/v3/mail/send', data);
+    console.log('fired sendgrid data', data, setupSendgridData(data));
+    return await ax.post('https://api.sendgrid.com/v3/mail/send', );
   } catch (err) {
     console.log('hit sendgrid error: ', err);
     return err;
+  }
+}
+
+const setupSendgridData = function(data: any): any {
+  return {
+    personalizations: [
+      {
+        to: [
+          {
+            email: data.to,
+            name: data.to_name,
+          }
+        ],
+        subject: data.subject,
+      },
+    ],
+    from: {
+      email: data.from,
+      name: data.from_name,
+    },
+    reply_to: {
+      email: data.from,
+      name: data.from_name,
+    },
+    content: [
+      {
+        type: 'text/html',
+        value: data.body
+      }
+    ],
   }
 }
 

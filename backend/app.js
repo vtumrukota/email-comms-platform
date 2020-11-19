@@ -41,10 +41,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var express_1 = __importDefault(require("express"));
 var axios_1 = __importDefault(require("axios"));
-var app = express_1.default();
-var PORT = 8080;
-var offlineEmails = [];
+var dotenv_1 = __importDefault(require("dotenv"));
+// Setup Enviornment Variables
+dotenv_1.default.config();
+var PORT = process.env.PORT || 8080;
+// Configure axios
+var ax = axios_1.default.create({
+    timeout: 10000,
+    headers: {
+        'Content-type': 'application/json',
+        'Authorization': "Bearer " + process.env.SENDGRID_KEY,
+    }
+});
 // Initialize Server
+var app = express_1.default();
 app.listen(PORT, function () {
     console.log('Started server & listening on port: ', PORT);
 });
@@ -71,20 +81,47 @@ var sendgridPost = function (data) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    console.log('sendgrid data', data);
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, axios_1.default.post('https://api.sendgrid.com/v3/mail/send', data)];
-                case 2: return [2 /*return*/, _a.sent()];
-                case 3:
+                    _a.trys.push([0, 2, , 3]);
+                    console.log('fired sendgrid data', data, setupSendgridData(data));
+                    return [4 /*yield*/, ax.post('https://api.sendgrid.com/v3/mail/send')];
+                case 1: return [2 /*return*/, _a.sent()];
+                case 2:
                     err_1 = _a.sent();
                     console.log('hit sendgrid error: ', err_1);
-                    return [3 /*break*/, 4];
-                case 4: return [2 /*return*/];
+                    return [2 /*return*/, err_1];
+                case 3: return [2 /*return*/];
             }
         });
     });
+};
+var setupSendgridData = function (data) {
+    return {
+        personalizations: [
+            {
+                to: [
+                    {
+                        email: data.to,
+                        name: data.to_name,
+                    }
+                ],
+                subject: data.subject,
+            },
+        ],
+        from: {
+            email: data.from,
+            name: data.from_name,
+        },
+        reply_to: {
+            email: data.from,
+            name: data.from_name,
+        },
+        content: [
+            {
+                type: 'text/html',
+                value: data.body
+            }
+        ],
+    };
 };
 var stub = function () { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
