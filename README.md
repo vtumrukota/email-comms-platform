@@ -46,6 +46,8 @@ Lastly, navigate in your browser to `localhost:4200` and you should see the app.
   * Dotenv
     - This easily allows us to use the `.env` file properly and avoid exposing our API keys to our code repository via the `.gitignore`. This was an easy choice to pass these secret keys into the app smoothly and without too much setup.
 
+* TypeScript was used on both ends of the stack. You will see many `defintiions.ts` files across the folders which self-document the code and give the developer a strong sense of the inputs/outouts of each function and the data structures being used across the application. This exposed simple bugs during development and helps ensure the developer can catch their own mistakes in real-time.
+
 #### Features
   * The application doesn't allow an Email service choice as it is automatically going to attempt with Sendgrid and if that fails, it will default to try Postmark. Because of this I did not add an toggle option in the UI to save the user from having to think about it
   * The form will not save unless the user has provided valid emails and filled out every required field
