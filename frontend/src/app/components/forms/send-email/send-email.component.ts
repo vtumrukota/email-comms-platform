@@ -43,7 +43,7 @@ export class SendEmailComponent {
       return;
     }
     this.inProgress = true;
-    this.emailService.sendEmail(data).subscribe((resp) => {
+    this.emailService.sendEmail(data).subscribe(() => {
       this.openSnackbar(ALERTS.SUCCESS);
       this.enableSendBtn();
       this.emailForm = DEFAULT_EMAIL_FORM;
