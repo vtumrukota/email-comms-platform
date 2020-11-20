@@ -37,27 +37,25 @@ const app : express.Application = express();
 app.use(express.json());
 app.listen(PORT, () => {
   console.log('Started server & listening on port: ', PORT);
-  console.log('Loaded ENV variables: ');
-  console.log('Sendgrid Key: ', SENDGRID);
-  console.log('Postmark Key: ', POSTMARK);
+  SENDGRID && POSTMARK ? console.log('Loaded API Keys!') : console.log('Failed to load API Keys!');
 });
 
 // APIs (v1)
-app.post('/api/v1/email', async(req: any, res: any) => {
+app.post('/api/v1/email', async(req, res) => {
   try {
-    const resp = await sendgridPost(req as any);
-    return res.json(resp);
-  } catch {
+    const resp = await sendgridPost(req.body);
+    return res.json(resp.data);
+  } catch (err) {
     // If Sendgrid Service fails, try again with Postmark
     try {
       const resp = await postmarkPost(req.body);
-      return res.json(resp);
+      return res.json(resp.data);
     } catch (err) {
-      // If both services fail, return error back to FE
+    // If both services fail, return error back to FE
       if (err.response) {
         const errCode: number = err.response.status;
         const data = err.response.data;
-        res.status(errCode).send(data);
+        return res.status(errCode).send(data);
       } else if (err.request) {
       // TODO: Add error handling for below hooks
         console.log(err.request);

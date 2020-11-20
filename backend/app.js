@@ -71,48 +71,42 @@ var app = express_1.default();
 app.use(express_1.default.json());
 app.listen(PORT, function () {
     console.log('Started server & listening on port: ', PORT);
-    console.log('Loaded ENV variables: ');
-    console.log('Sendgrid Key: ', SENDGRID);
-    console.log('Postmark Key: ', POSTMARK);
+    SENDGRID && POSTMARK ? console.log('Loaded API Keys!') : console.log('Failed to load API Keys!');
 });
 // APIs (v1)
 app.post('/api/v1/email', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var resp, _a, resp, err_1, errCode, data;
-    return __generator(this, function (_b) {
-        switch (_b.label) {
+    var resp, err_1, errCode, data;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
             case 0:
-                _b.trys.push([0, 2, , 7]);
-                return [4 /*yield*/, sendgridPost(req)];
+                _a.trys.push([0, 2, , 3]);
+                return [4 /*yield*/, sendgridPost(req.body)];
             case 1:
-                resp = _b.sent();
-                return [2 /*return*/, res.json(resp)];
+                resp = _a.sent();
+                console.log('HIT SENDGRID AND ESCAPE');
+                return [2 /*return*/, res.json(resp.data)];
             case 2:
-                _a = _b.sent();
-                _b.label = 3;
-            case 3:
-                _b.trys.push([3, 5, , 6]);
-                return [4 /*yield*/, postmarkPost(req.body)];
-            case 4:
-                resp = _b.sent();
-                return [2 /*return*/, res.json(resp)];
-            case 5:
-                err_1 = _b.sent();
-                // If both services fail, return error back to FE
+                err_1 = _a.sent();
+                console.log('hitting error block');
+                // If Sendgrid Service fails, try again with Postmark
+                // try {
+                //   const resp = await postmarkPost(req.body);
+                //   return res.json(resp);
+                // } catch (err) {
+                //   // If both services fail, return error back to FE
                 if (err_1.response) {
                     errCode = err_1.response.status;
                     data = err_1.response.data;
                     res.status(errCode).send(data);
+                    //   } else if (err.request) {
+                    //   // TODO: Add error handling for below hooks
+                    //     console.log(err.request);
+                    //   } else {
+                    //     console.log('Error: ', err.message);
+                    //   }
                 }
-                else if (err_1.request) {
-                    // TODO: Add error handling for below hooks
-                    console.log(err_1.request);
-                }
-                else {
-                    console.log('Error: ', err_1.message);
-                }
-                return [3 /*break*/, 6];
-            case 6: return [3 /*break*/, 7];
-            case 7: return [2 /*return*/];
+                return [3 /*break*/, 3];
+            case 3: return [2 /*return*/];
         }
     });
 }); });
@@ -121,6 +115,7 @@ var sendgridPost = function (emailData) { return __awaiter(void 0, void 0, void 
     var data;
     return __generator(this, function (_a) {
         data = setupSendgridData(emailData);
+        console.log(JSON.stringify(data));
         return [2 /*return*/, sgAxios.post(sendgridUrl, data)];
     });
 }); };
@@ -136,41 +131,24 @@ var setupSendgridData = function (data) {
     return {
         personalizations: [
             {
-                to: [
-                    {
-                        email: data.to,
-                        name: data.to_name,
-                    }
-                ],
+                to: [{ email: data.to, name: data.to_name }],
                 subject: data.subject,
             },
         ],
-        from: {
-            email: data.from,
-            name: data.from_name,
-        },
-        reply_to: {
-            email: data.from,
-            name: data.from_name,
-        },
-        content: [
-            {
-                type: 'text/html',
-                value: data.body
-            }
-        ],
+        from: { email: data.from, name: data.from_name },
+        reply_to: { email: data.from, name: data.from_name },
+        content: [{ type: 'text/html', value: data.body }],
     };
 };
 var setupPostmarkData = function (data) {
     var pmData = {
         From: data.from_name + " <" + data.from + ">",
-        To: data.to + " <" + data.to + ">",
+        To: data.to_name + " <" + data.to + ">",
         Subject: data.subject,
         HtmlBody: data.body,
         MessageStream: 'outbound',
     };
     if (data.reply_to)
         pmData.ReplyTo = data.reply_to;
-    console.log('pmData', JSON.stringify(pmData));
     return pmData;
 };
