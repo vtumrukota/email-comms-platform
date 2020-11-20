@@ -32,7 +32,6 @@ export class SendEmailComponent implements OnInit {
   sanitizeInput(text: string, key: EmailFields): void {
     // TODO: Debounce this to avoid unncessary calls on each user keystroke
     // Remove any potentially malicious/dangerous inputs
-    console.log('text', text, key);
     this.emailForm[key] = this.sanitizer.sanitize(SecurityContext.HTML, text);
   }
 

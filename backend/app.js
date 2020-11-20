@@ -39,11 +39,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+// Initialize Enviornment Variables & Modules
+require('dotenv').config({ path: __dirname + "/../.env" });
 var express_1 = __importDefault(require("express"));
 var axios_1 = __importDefault(require("axios"));
-var dotenv_1 = __importDefault(require("dotenv"));
-// Setup Enviornment Variables
-dotenv_1.default.config();
 var PORT = process.env.PORT || 8080;
 // Configure axios
 var ax = axios_1.default.create({
@@ -55,15 +54,17 @@ var ax = axios_1.default.create({
 });
 // Initialize Server
 var app = express_1.default();
+app.use(express_1.default.json());
 app.listen(PORT, function () {
     console.log('Started server & listening on port: ', PORT);
+    console.log('key', process.env.SENDGRID_KEY);
 });
 // Send Email POST API
 app.post('/api/v1/email', function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
     var resp;
     return __generator(this, function (_a) {
         try {
-            resp = sendgridPost(req);
+            resp = sendgridPost(req.body);
             console.log('response', resp);
             return [2 /*return*/, res.json(resp)];
         }
@@ -74,16 +75,18 @@ app.post('/api/v1/email', function (req, res, next) { return __awaiter(void 0, v
         return [2 /*return*/];
     });
 }); });
-var sendgridPost = function (data) {
-    if (data === void 0) { data = {}; }
+var sendgridPost = function (emailData) {
+    if (emailData === void 0) { emailData = {}; }
     return __awaiter(void 0, void 0, void 0, function () {
-        var err_1;
+        var data, err_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 2, , 3]);
-                    console.log('fired sendgrid data', data, setupSendgridData(data));
-                    return [4 /*yield*/, ax.post('https://api.sendgrid.com/v3/mail/send')];
+                    console.log('fired sendgrid data', emailData);
+                    data = setupSendgridData(emailData);
+                    console.log('DATA TO SENDGRID', data);
+                    return [4 /*yield*/, ax.post('https://api.sendgrid.com/v3/mail/send', data)];
                 case 1: return [2 /*return*/, _a.sent()];
                 case 2:
                     err_1 = _a.sent();
@@ -95,6 +98,7 @@ var sendgridPost = function (data) {
     });
 };
 var setupSendgridData = function (data) {
+    console.log('DATA in SETUP', data);
     return {
         personalizations: [
             {

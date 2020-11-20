@@ -1,9 +1,8 @@
+// Initialize Enviornment Variables & Modules
+require('dotenv').config({ path: `${__dirname}/../.env` });
 import express from 'express';
 import axios from 'axios';
-import dotenv from 'dotenv';
 
-// Setup Enviornment Variables
-dotenv.config();
 const PORT = process.env.PORT || 8080;
 // Configure axios
 const ax = axios.create({
@@ -16,15 +15,16 @@ const ax = axios.create({
 
 // Initialize Server
 const app : express.Application = express();
+app.use(express.json());
+
 app.listen(PORT, () => {
   console.log('Started server & listening on port: ', PORT);
+  console.log('key', process.env.SENDGRID_KEY)
 });
 // Send Email POST API
 app.post('/api/v1/email', async(req, res, next) => {
   try {
-    // console.log('request', request);
-    // const resp = await stub();
-    const resp = sendgridPost(req);
+    const resp = sendgridPost(req.body);
     console.log('response', resp);
     return res.json(resp);
   } catch (err) {
@@ -33,10 +33,12 @@ app.post('/api/v1/email', async(req, res, next) => {
   }
 });
 
-const sendgridPost = async(data: any = {}) => {
+const sendgridPost = async(emailData: any = {}) => {
   try {
-    console.log('fired sendgrid data', data, setupSendgridData(data));
-    return await ax.post('https://api.sendgrid.com/v3/mail/send', );
+    console.log('fired sendgrid data', emailData);
+    const data = setupSendgridData(emailData);
+    console.log('DATA TO SENDGRID', data);
+    return await ax.post('https://api.sendgrid.com/v3/mail/send', data);
   } catch (err) {
     console.log('hit sendgrid error: ', err);
     return err;
@@ -44,6 +46,7 @@ const sendgridPost = async(data: any = {}) => {
 }
 
 const setupSendgridData = function(data: any): any {
+  console.log('DATA in SETUP', data);
   return {
     personalizations: [
       {
@@ -72,11 +75,3 @@ const setupSendgridData = function(data: any): any {
     ],
   }
 }
-
-
-const stub = async () => {
-  console.log('stub called');
-  setTimeout(() => {
-    return { success: 'This stub succeeded'}
-  }, 2000)
-};
