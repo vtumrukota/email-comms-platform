@@ -41,16 +41,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 // Requires & Imports
 require('dotenv').config({ path: __dirname + "/../.env" });
+var MongoClient = require('mongodb').MongoClient;
 var express_1 = __importDefault(require("express"));
 var axios_1 = __importDefault(require("axios"));
 // Environment variables
 var PORT = process.env.PORT || 8080;
 var SENDGRID = process.env.SENDGRID_KEY || '';
 var POSTMARK = process.env.POSTMARK_KEY || 'POSTMARK_API_TEST';
+var MONGO_USER_PW = process.env.MONGO_USER_PW || '';
+var MONGO_DB_NAME = process.env.MONGO_DB_NAME || '';
 // Service API URLs
 var sendgridUrl = 'https://api.sendgrid.com/v3/mail/send';
 var postmarkUrl = 'https://api.postmarkapp.com/email';
-// Configure axios for both Email services
+var mongoAtlasUrl = "mongodb+srv://vivek:" + MONGO_USER_PW + "@cluster0.w8rbo.mongodb.net/" + MONGO_DB_NAME + "?retryWrites=true&w=majority";
+// Configure clients for both Email services & MongoDB
 var sgAxios = axios_1.default.create({
     timeout: 10000,
     headers: {
@@ -66,47 +70,69 @@ var pmAxios = axios_1.default.create({
         'X-Postmark-Server-Token': POSTMARK,
     }
 });
+var mdbClient = new MongoClient(mongoAtlasUrl, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
 // Initialize Server
 var app = express_1.default();
 app.use(express_1.default.json());
 app.listen(PORT, function () {
     console.log('Started server & listening on port: ', PORT);
-    SENDGRID && POSTMARK ? console.log('Loaded API Keys!') : console.log('Failed to load API Keys!');
+    SENDGRID && POSTMARK ?
+        console.log('Loaded API Keys!') :
+        console.log('Failed to load API Keys!');
 });
 // APIs (v1)
 app.post('/api/v1/email', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var resp, err_1, errCode, data;
+    var resp, mongoData, err_1, resp, mongoData, err_2, errCode, data;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                _a.trys.push([0, 2, , 3]);
+                _a.trys.push([0, 4, , 11]);
                 return [4 /*yield*/, sendgridPost(req.body)];
             case 1:
                 resp = _a.sent();
-                console.log('HIT SENDGRID AND ESCAPE');
-                return [2 /*return*/, res.json(resp.data)];
+                mongoData = setupSendgridData(req.body);
+                if (!(MONGO_USER_PW && MONGO_DB_NAME)) return [3 /*break*/, 3];
+                return [4 /*yield*/, storeToMongo(mongoData)];
             case 2:
+                _a.sent();
+                _a.label = 3;
+            case 3: return [2 /*return*/, res.json(resp.data)];
+            case 4:
                 err_1 = _a.sent();
-                console.log('hitting error block');
-                // If Sendgrid Service fails, try again with Postmark
-                // try {
-                //   const resp = await postmarkPost(req.body);
-                //   return res.json(resp);
-                // } catch (err) {
-                //   // If both services fail, return error back to FE
-                if (err_1.response) {
-                    errCode = err_1.response.status;
-                    data = err_1.response.data;
-                    res.status(errCode).send(data);
-                    //   } else if (err.request) {
-                    //   // TODO: Add error handling for below hooks
-                    //     console.log(err.request);
-                    //   } else {
-                    //     console.log('Error: ', err.message);
-                    //   }
+                _a.label = 5;
+            case 5:
+                _a.trys.push([5, 9, , 10]);
+                return [4 /*yield*/, postmarkPost(req.body)];
+            case 6:
+                resp = _a.sent();
+                mongoData = setupPostmarkData(req.body);
+                if (!(MONGO_USER_PW && MONGO_DB_NAME)) return [3 /*break*/, 8];
+                return [4 /*yield*/, storeToMongo(mongoData)];
+            case 7:
+                _a.sent();
+                _a.label = 8;
+            case 8: return [2 /*return*/, res.json(resp.data)];
+            case 9:
+                err_2 = _a.sent();
+                // If both services fail, return error back to FE
+                if (err_2.response) {
+                    errCode = err_2.response.status;
+                    data = err_2.response.data;
+                    return [2 /*return*/, res.status(errCode).send(data)];
                 }
-                return [3 /*break*/, 3];
-            case 3: return [2 /*return*/];
+                else if (err_2.request) {
+                    // TODO: Add error handling for below hooks
+                    console.log(err_2.request);
+                }
+                else {
+                    console.log('Error: ', err_2.message);
+                }
+                return [3 /*break*/, 10];
+            case 10: return [3 /*break*/, 11];
+            case 11: return [2 /*return*/];
         }
     });
 }); });
@@ -115,7 +141,6 @@ var sendgridPost = function (emailData) { return __awaiter(void 0, void 0, void 
     var data;
     return __generator(this, function (_a) {
         data = setupSendgridData(emailData);
-        console.log(JSON.stringify(data));
         return [2 /*return*/, sgAxios.post(sendgridUrl, data)];
     });
 }); };
@@ -127,6 +152,34 @@ var postmarkPost = function (emailData) { return __awaiter(void 0, void 0, void 
     });
 }); };
 // Helper Methods
+var storeToMongo = function (email) { return __awaiter(void 0, void 0, void 0, function () {
+    var db, col, err_3;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                _a.trys.push([0, 3, 4, 6]);
+                return [4 /*yield*/, mdbClient.connect()];
+            case 1:
+                _a.sent();
+                db = mdbClient.db(process.env.MONGO_DB_NAME);
+                col = db.collection('emails');
+                return [4 /*yield*/, col.insertOne(email)];
+            case 2:
+                _a.sent();
+                return [3 /*break*/, 6];
+            case 3:
+                err_3 = _a.sent();
+                // TODO: Add error logging & retry mechanism for DB write failures
+                console.log('Error writing to MongoDB: ', err_3.stack);
+                return [3 /*break*/, 6];
+            case 4: return [4 /*yield*/, mdbClient.close()];
+            case 5:
+                _a.sent();
+                return [7 /*endfinally*/];
+            case 6: return [2 /*return*/];
+        }
+    });
+}); };
 var setupSendgridData = function (data) {
     return {
         personalizations: [
