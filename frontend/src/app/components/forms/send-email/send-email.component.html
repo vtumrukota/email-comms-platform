@@ -1,62 +1,62 @@
 <mat-card>
   <mat-card-header>
-    <mat-card-title aria-label="Send an Email to anyone below: ">
-      Send your Email below: 
+    <mat-card-title [attr.aria-label]="tplText.SEND_EMAIL_BELOW">
+      {{tplText.SEND_EMAIL_BELOW}} 
     </mat-card-title>
   </mat-card-header>
   <!-- TODO: Radio button for Sendgrid/Postmark choice -->
   <form name="email-form">
     <mat-card-content>
       <mat-form-field>
-        <mat-label>Recipient Email</mat-label>
+        <mat-label>{{tplText.RECIPIENT_EMAIL.TEXT}}</mat-label>
         <input matInput type="email" email required
           name="recipient-email"
-          placeholder="ex. jumpman23@gmail.com"
+          placeholder="{{tplText.RECIPIENT_EMAIL.PLACEHOLDER}}"
           [ngModel]="emailForm.recipientEmail"
           (ngModelChange)="sanitizeInput($event, fieldNames.RECIPIENT_EMAIL)"
         />
       </mat-form-field>
       <mat-form-field>
-        <mat-label>Recipient Name</mat-label>
+        <mat-label>{{tplText.RECIPIENT_NAME.TEXT}}</mat-label>
         <input matInput type="text" required
           name="recipient-name"
-          placeholder="ex. Michael Jordan"
+          placeholder="{{tplText.RECIPIENT_NAME.PLACEHOLDER}}"
           [ngModel]="emailForm.recipientName"
           (ngModelChange)="sanitizeInput($event, fieldNames.RECIPIENT_NAME)"
         />
       </mat-form-field>
       <mat-form-field>
-        <mat-label>Sender Email</mat-label>
+        <mat-label>{{tplText.SENDER_EMAIL.TEXT}}</mat-label>
         <input matInput type="email" email required
           name="sender-email"
-          placeholder="ex. vtumrukota@gmail.com"
+          placeholder="{{tplText.SENDER_EMAIL.PLACEHOLDER}}"
           [ngModel]="emailForm.senderEmail"
           (ngModelChange)="sanitizeInput($event, fieldNames.SENDER_EMAIL)"
         />
       </mat-form-field>
       <mat-form-field>
-        <mat-label>Sender Name</mat-label>
+        <mat-label>{{tplText.SENDER_NAME.TEXT}}</mat-label>
         <input matInput type="text" required
           name="sender-name"
-          placeholder="ex. Vivek Tumrukota"
+          placeholder="{{tplText.SENDER_NAME.PLACEHOLDER}}"
           [ngModel]="emailForm.senderName"
           (ngModelChange)="sanitizeInput($event, fieldNames.SENDER_NAME)"
         />
       </mat-form-field>
       <mat-form-field>
-        <mat-label>Subject</mat-label>
+        <mat-label>{{tplText.SUBJECT.TEXT}}</mat-label>
         <input matInput type="text" required
           name="subject"
-          placeholder="ex. 'Hey there!''"
+          placeholder="{{tplText.SUBJECT.PLACEHOLDER}}"
           [ngModel]="emailForm.subject"
           (ngModelChange)="sanitizeInput($event, fieldNames.SUBJECT)"
         />
       </mat-form-field>
       <mat-form-field name="email-message">
-        <mat-label>Message</mat-label>
+        <mat-label>{{tplText.MESSAGE.TEXT}}</mat-label>
         <textarea matInput type="text" required
           name="message"
-          placeholder="ex. 'Lets hang out!'"
+          placeholder="{{tplText.MESSAGE.PLACEHOLDER}}"
           [ngModel]="emailForm.message"
           (ngModelChange)="sanitizeInput($event, fieldNames.MESSAGE)">
         </textarea>
@@ -64,9 +64,10 @@
     </mat-card-content>
     <mat-card-actions>
       <button mat-raised-button color="primary"
-        aria-label="Send Email"
+        [attr.aria-label]="tplText.SEND_EMAIL"
+        [disabled]="inProgress"
         (click)="send()">
-        Send Email
+        {{tplText.SEND_EMAIL}}
       </button>
     </mat-card-actions>
   </form>

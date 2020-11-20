@@ -8,6 +8,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatInputModule } from '@angular/material/input';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+
 // App Components
 import { AppComponent } from './app.component';
 import { SendEmailComponent } from './components/forms/send-email/send-email.component';
@@ -26,6 +28,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     MatInputModule,
     MatCardModule,
     MatButtonModule,
+    MatSnackBarModule,
     BrowserAnimationsModule,
   ],
   providers: [SendEmailComponent],

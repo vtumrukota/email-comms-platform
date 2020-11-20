@@ -15,3 +15,9 @@ Packages:
   - express for server
   - axios for easy api calls in node
   - dotenv to pass API secrets/keys
+
+
+Error Handling
+  - too large body request
+  - form validation w/ errors
+  - 
