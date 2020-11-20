@@ -63,6 +63,7 @@ Lastly, navigate in your browser to `localhost:4200` and you should see the app.
   - Take advantage of Angulars FormControl handler to quickly & easily validate the form to ensure all 
   
 #### Backend
-  - Failed email queue mechanism
+  - Failed email queue & retry mechanism
+    - i.e. if both services fail, the email would enter a queue that would be tracked within a poller running every X seconds to iterate through the queue and retry to send those emails. Upon success they would leave the queue and the poller would only run if the queue had any items
   - Better error handling if MongoDB writes fails
-  - Ensure the email body requests dont break upper bounds
+  - Ensure the email body requests dont break upper bounds of the service APIs
